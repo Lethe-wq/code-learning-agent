@@ -1,0 +1,16 @@
+.worktrees/
+.superpowers/
+node_modules/
+.npm-cache/
+__pycache__/
+.pytest_cache/
+.venv/
+*.pyc
+*.egg-info/
+.env
+.env.*
+!.env.example
+dist/
+coverage/
+data/
+*.db
