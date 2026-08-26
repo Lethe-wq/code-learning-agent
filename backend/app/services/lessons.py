@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any
 
+from sqlalchemy import or_
 from sqlmodel import Session, desc, select
 
 from app.api.errors import APIError
@@ -14,6 +15,7 @@ from app.schemas.interaction import (
     LessonActionRequest,
     LessonInteractionResponse,
 )
+from app.schemas.common import Category, ReviewStatus
 from app.schemas.lesson import CreateLessonRequest, LessonListResponse, LessonResponse, UpdateLessonRequest
 from app.schemas.llm import ActionGeneration, AskGeneration, LessonGeneration
 from app.services.ids import prefixed_id
@@ -50,9 +52,28 @@ class LessonService:
     def get_lesson(self, lesson_id: str) -> LessonResponse:
         return self._lesson_response(self._get_lesson_model(lesson_id))
 
-    def list_lessons(self, limit: int = 20) -> LessonListResponse:
+    def list_lessons(
+        self,
+        limit: int = 20,
+        *,
+        offset: int = 0,
+        query: str | None = None,
+        category: Category | None = None,
+        review_status: ReviewStatus | None = None,
+        is_favorite: bool | None = None,
+    ) -> LessonListResponse:
+        statement = select(Lesson)
+        if query and query.strip():
+            search = f"%{query.strip()}%"
+            statement = statement.where(or_(Lesson.title.ilike(search), Lesson.user_prompt.ilike(search)))
+        if category:
+            statement = statement.where(Lesson.category == category)
+        if review_status:
+            statement = statement.where(Lesson.review_status == review_status)
+        if is_favorite is not None:
+            statement = statement.where(Lesson.is_favorite == is_favorite)
         lessons = self.session.exec(
-            select(Lesson).order_by(desc(Lesson.created_at)).limit(limit)
+            statement.order_by(desc(Lesson.created_at)).offset(offset).limit(limit)
         ).all()
         return LessonListResponse(items=[self._lesson_response(lesson) for lesson in lessons])
 

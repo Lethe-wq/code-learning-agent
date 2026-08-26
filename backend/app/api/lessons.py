@@ -5,6 +5,7 @@ from app.api.dependencies import get_llm_client
 from app.db.database import get_session
 from app.llm.generator import JSONGenerator
 from app.schemas.interaction import AskRequest, LessonActionRequest, LessonInteractionResponse
+from app.schemas.common import Category, ReviewStatus
 from app.schemas.lesson import CreateLessonRequest, LessonListResponse, LessonResponse, UpdateLessonRequest
 from app.services.lessons import LessonService
 
@@ -29,9 +30,21 @@ def create_lesson(
 @router.get("", response_model=LessonListResponse)
 def list_lessons(
     limit: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    q: str | None = Query(default=None, max_length=200),
+    category: Category | None = Query(default=None),
+    review_status: ReviewStatus | None = Query(default=None),
+    is_favorite: bool | None = Query(default=None),
     service: LessonService = Depends(get_lesson_service),
 ) -> LessonListResponse:
-    return service.list_lessons(limit)
+    return service.list_lessons(
+        limit,
+        offset=offset,
+        query=q,
+        category=category,
+        review_status=review_status,
+        is_favorite=is_favorite,
+    )
 
 
 @router.get("/{lesson_id}", response_model=LessonResponse)

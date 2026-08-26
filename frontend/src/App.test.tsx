@@ -68,7 +68,7 @@ describe('dashboard', () => {
     );
 
     await userEvent.clear(screen.getByLabelText('API base URL'));
-    await userEvent.type(screen.getByLabelText('API base URL'), 'http://127.0.0.1:9000');
+    await userEvent.type(screen.getByLabelText('API base URL'), 'http://127.0.0.1:9000/api');
     await userEvent.selectOptions(screen.getByLabelText('Default category'), 'python');
     await userEvent.selectOptions(screen.getByLabelText('Default difficulty'), 'beginner');
     await userEvent.selectOptions(screen.getByLabelText('Language preference'), 'Chinese');
@@ -214,5 +214,85 @@ describe('lesson page', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Give example' }));
 
     await waitFor(() => expect(screen.getByText('Could not generate an example right now')).toBeInTheDocument());
+  });
+});
+
+describe('workspace pages', () => {
+  test('filters learning history through the lesson list API', async () => {
+    const fetchMock = installFetchMock();
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.endsWith('/api/lessons?limit=100')) return mockJsonResponse({ items: [lessonFixture] });
+      return mockJsonResponse({ error: { code: 'UNKNOWN', message: 'Unknown request' } }, { status: 404 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/history']}>
+        <AppRoutes />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Learning history' })).toBeInTheDocument();
+    expect(await screen.findByText('Python decorators')).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Search lessons'), 'decorators');
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledWith(
+      'http://localhost:8000/api/lessons?limit=100&q=decorators',
+      expect.anything()
+    ));
+  });
+
+  test('edits and deletes a saved note', async () => {
+    const fetchMock = installFetchMock();
+    const note = {
+      id: 'note_1',
+      lesson_id: lessonFixture.id,
+      lesson_title: lessonFixture.title,
+      content: 'Remember the wrapper.',
+      created_at: '2026-06-23T10:00:00.000Z',
+      updated_at: '2026-06-23T10:00:00.000Z'
+    };
+    fetchMock.mockImplementation((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input);
+      if (url.endsWith('/api/notes?limit=100')) return mockJsonResponse({ items: [note] });
+      if (url.endsWith('/api/notes/note_1') && init?.method === 'PATCH') {
+        return mockJsonResponse({ ...note, content: 'Remember the closure wrapper.' });
+      }
+      if (url.endsWith('/api/notes/note_1') && init?.method === 'DELETE') {
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+      return mockJsonResponse({ error: { code: 'UNKNOWN', message: 'Unknown request' } }, { status: 404 });
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/notes']}>
+        <AppRoutes />
+      </MemoryRouter>
+    );
+
+    expect(await screen.findByText('Remember the wrapper.')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    await userEvent.clear(screen.getByRole('textbox', { name: 'Edit note' }));
+    await userEvent.type(screen.getByRole('textbox', { name: 'Edit note' }), 'Remember the closure wrapper.');
+    await userEvent.click(screen.getByRole('button', { name: 'Save note' }));
+    expect(await screen.findByText('Remember the closure wrapper.')).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    await waitFor(() => expect(screen.queryByText('Remember the closure wrapper.')).not.toBeInTheDocument());
+  });
+
+  test('switches the interface language from settings', async () => {
+    render(
+      <MemoryRouter initialEntries={['/settings']}>
+        <AppRoutes />
+      </MemoryRouter>
+    );
+
+    await userEvent.selectOptions(screen.getByLabelText('Interface language'), 'Chinese');
+    await userEvent.click(screen.getByRole('button', { name: 'Save settings' }));
+
+    expect(await screen.findByRole('heading', { name: '设置' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '学习记录' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '保存设置' })).toBeInTheDocument();
   });
 });

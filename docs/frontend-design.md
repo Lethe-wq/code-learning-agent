@@ -91,3 +91,15 @@ Content blocks:
 - The MVP prioritizes desktop Web first.
 - The MVP focuses on knowledge explanation rather than exercises.
 - Backend design will be discussed separately and should respect these frontend constraints.
+
+## Implemented Workbench Direction
+
+- The home route uses an asymmetric learning composer and a three-part learning status area.
+- Lesson remains a single reading column with inline interactions and notes at the end of the document flow.
+- History supports local Lesson search, category, review, and favorite filters.
+- Notes supports workspace-wide search, editing, deletion, and links back to the source Lesson.
+- Settings stores theme and reading scale alongside existing local preferences.
+- Settings also provides an explicit English/Chinese interface language switch; Lesson output language remains an independent preference.
+- The visual system uses warm gray paper, graphite text, one muted rust accent, Satoshi-style sans typography, and graphite code blocks.
+- Loading states use layout-matched skeletons; errors and empty states include a recovery action.
+- Desktop layouts collapse to one column below the mobile breakpoint; no fixed panel covers reading content.
