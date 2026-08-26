@@ -1,4 +1,4 @@
-import { createContext, FormEvent, useContext, useEffect, useState } from 'react';
+import { createContext, FormEvent, useContext, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { apiClient, errorMessage } from './api/client';
 import type {
@@ -42,6 +42,32 @@ function useCopy() {
 
 function delay(ms: number) {
   return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function Reveal({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    if (!('IntersectionObserver' in window)) {
+      element.classList.add('is-visible');
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        element.classList.add('is-visible');
+        observer.unobserve(element);
+      },
+      { rootMargin: '0px 0px -10% 0px', threshold: 0.08 }
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  return <div ref={ref} className={`reveal ${className}`}>{children}</div>;
 }
 
 function LocaleProvider({ children }: { children: React.ReactNode }) {
@@ -141,7 +167,8 @@ function DashboardPage() {
 
   return (
     <AppShell>
-      <main className="dashboard">
+      <main className="dashboard page-transition">
+        <Reveal>
         <section className="home-hero" aria-labelledby="dashboard-title">
           <div className="home-copy">
             <p className="eyebrow">{copy.dashboard.eyebrow}</p>
@@ -183,7 +210,9 @@ function DashboardPage() {
             {error && <p className="error-text">{error}</p>}
           </div>
         </section>
+        </Reveal>
 
+        <Reveal>
         <section className="dashboard-grid" aria-label={copy.misc.learningOverview}>
           <GlassPanel title={copy.dashboard.recentLessons} loading={loading}>
             {recentLessons.length ? (
@@ -213,6 +242,7 @@ function DashboardPage() {
             <PillList items={profile?.recommended_topics ?? []} empty={copy.dashboard.noRecommendations} />
           </GlassPanel>
         </section>
+        </Reveal>
       </main>
     </AppShell>
   );
@@ -381,7 +411,7 @@ function LessonPage() {
   if (loading) {
     return (
       <AppShell>
-        <main className="lesson-page narrow">
+        <main className="lesson-page narrow page-transition">
           <div className="lesson-skeleton" aria-label={copy.lesson.preparing}>
             <p className="loading-text">{copy.lesson.preparing}</p>
             <span />
@@ -396,7 +426,7 @@ function LessonPage() {
   if (error || !lesson) {
     return (
       <AppShell>
-        <main className="lesson-page narrow">
+        <main className="lesson-page narrow page-transition">
             <div className="state-panel error-state">
             <h1>{copy.lesson.unavailable}</h1>
             <p>{error ?? copy.lesson.notFound}</p>
@@ -409,7 +439,7 @@ function LessonPage() {
 
   return (
     <AppShell>
-      <main className="lesson-page">
+      <main className="lesson-page page-transition">
         <form className="lesson-search" onSubmit={submitQuestion}>
           <div className="search-label-row">
             <label htmlFor="lesson-question">{copy.lesson.askWithin}</label>
@@ -487,6 +517,7 @@ function LessonPage() {
 
           <LessonContent lesson={lesson} />
 
+          <Reveal>
           <section className="notes-section" aria-labelledby="lesson-notes-title">
             <div className="section-heading">
               <div>
@@ -525,6 +556,7 @@ function LessonPage() {
               </div>
             )}
           </section>
+          </Reveal>
         </article>
       </main>
     </AppShell>
@@ -537,6 +569,7 @@ function InteractionResult({ interaction }: { interaction: LessonInteraction }) 
   const isAction = 'title' in response;
 
   return (
+    <Reveal>
     <section className="interaction-result" aria-live="polite">
       <div className="interaction-label">{isAction ? `${copy.lesson.requested}: ${response.action}` : copy.lesson.followupAnswer}</div>
       <h2>{isAction ? response.title : response.short_answer}</h2>
@@ -554,6 +587,7 @@ function InteractionResult({ interaction }: { interaction: LessonInteraction }) 
         </div>
       )}
     </section>
+    </Reveal>
   );
 }
 
@@ -608,10 +642,12 @@ function LessonContent({ lesson }: { lesson: Lesson }) {
 
 function ContentBlock({ title, children }: { title: string; children: React.ReactNode }) {
   return (
+    <Reveal>
     <section className="content-block">
       <h2>{title}</h2>
       {children}
     </section>
+    </Reveal>
   );
 }
 
@@ -660,7 +696,7 @@ function SettingsPage() {
 
   return (
     <AppShell>
-      <main className="settings-page">
+      <main className="settings-page page-transition">
         <section className="settings-panel">
           <p className="eyebrow">{copy.settings.eyebrow}</p>
           <h1>{copy.settings.title}</h1>
@@ -799,7 +835,7 @@ function HistoryPage() {
 
   return (
     <AppShell>
-      <main className="collection-page">
+      <main className="collection-page page-transition">
         <section className="page-heading">
           <p className="eyebrow">{copy.history.eyebrow}</p>
           <h1>{copy.history.title}</h1>
@@ -912,7 +948,7 @@ function NotesPage() {
 
   return (
     <AppShell>
-      <main className="collection-page">
+      <main className="collection-page page-transition">
         <section className="page-heading">
           <p className="eyebrow">{copy.notes.eyebrow}</p>
           <h1>{copy.notes.title}</h1>
@@ -953,7 +989,7 @@ function NotFoundPage() {
   const copy = useCopy();
   return (
     <AppShell>
-      <main className="simple-page">
+      <main className="simple-page page-transition">
         <section className="state-panel">
           <h1>{copy.misc.pageNotFound}</h1>
           <p>{copy.misc.routeMissing}</p>
