@@ -99,3 +99,40 @@ def test_expected_errors_use_contract_shape(client):
             "message": "Lesson not found",
         }
     }
+
+
+def test_lesson_filters_and_note_crud_use_expected_shapes(client, fake_llm):
+    fake_llm.queue_json(lesson_generation_payload("Python decorators"))
+    first = client.post(
+        "/api/lessons",
+        json={"prompt": "Explain decorators", "category": "python", "difficulty": "intermediate"},
+    ).json()
+    fake_llm.queue_json(lesson_generation_payload("SQL joins"))
+    second = client.post(
+        "/api/lessons",
+        json={"prompt": "Explain joins", "category": "sql", "difficulty": "beginner"},
+    ).json()
+
+    client.patch(f"/api/lessons/{first['id']}", json={"is_favorite": True})
+
+    filtered = client.get("/api/lessons?q=decorators&is_favorite=true")
+    assert filtered.status_code == 200
+    assert [item["id"] for item in filtered.json()["items"]] == [first["id"]]
+
+    note = client.post("/api/notes", json={"lesson_id": second["id"], "content": "Review joins."}).json()
+    assert note["lesson_title"] == "SQL joins"
+
+    all_notes = client.get("/api/notes")
+    assert [item["id"] for item in all_notes.json()["items"]] == [note["id"]]
+
+    updated = client.patch(f"/api/notes/{note['id']}", json={"content": "Review join cardinality."})
+    assert updated.status_code == 200
+    assert updated.json()["content"] == "Review join cardinality."
+
+    deleted = client.delete(f"/api/notes/{note['id']}")
+    assert deleted.status_code == 204
+    assert client.get("/api/notes").json()["items"] == []
+
+    missing_note = client.delete(f"/api/notes/{note['id']}")
+    assert missing_note.status_code == 404
+    assert missing_note.json()["error"]["code"] == "NOTE_NOT_FOUND"

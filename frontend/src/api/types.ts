@@ -3,6 +3,9 @@ export type Difficulty = 'beginner' | 'intermediate' | 'advanced';
 export type ReviewStatus = 'none' | 'need_review' | 'reviewed';
 export type LessonAction = 'rephrase' | 'example' | 'compare' | 'review';
 export type InteractionType = 'ask' | LessonAction;
+export type ThemePreference = 'system' | 'light' | 'dark';
+export type ReadingScale = 'compact' | 'default' | 'comfortable';
+export type UiLanguage = 'English' | 'Chinese';
 
 export interface CodeExample {
   title: string;
@@ -71,6 +74,7 @@ export interface LessonInteraction {
 export interface Note {
   id: string;
   lesson_id: string;
+  lesson_title?: string | null;
   content: string;
   created_at: string;
   updated_at: string;

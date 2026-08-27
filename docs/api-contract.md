@@ -99,6 +99,7 @@ interface LessonInteraction {
 interface Note {
   id: string;
   lesson_id: string;
+  lesson_title?: string | null;
   content: string;
   created_at: string;
   updated_at: string;
@@ -131,9 +132,17 @@ Request:
 
 Response: `Lesson`
 
-### List Recent Lessons
+### List Lessons
 
 `GET /api/lessons?limit=20`
+
+Optional query parameters:
+
+- `offset`: number of records to skip
+- `q`: search title or original prompt
+- `category`: category filter
+- `review_status`: review state filter
+- `is_favorite`: favorite filter
 
 Response:
 
@@ -209,7 +218,9 @@ Response: `Note`
 
 ### List Notes
 
-`GET /api/notes?lesson_id=lesson_123`
+`GET /api/notes?lesson_id=lesson_123&limit=100&q=closure`
+
+`lesson_id` is optional. Without it, the endpoint returns notes across the local workspace.
 
 Response:
 
@@ -218,6 +229,26 @@ Response:
   "items": []
 }
 ```
+
+### Update Note
+
+`PATCH /api/notes/{id}`
+
+Request:
+
+```json
+{
+  "content": "Updated note"
+}
+```
+
+Response: `Note`
+
+### Delete Note
+
+`DELETE /api/notes/{id}`
+
+Response: `204 No Content`
 
 ### Profile
 

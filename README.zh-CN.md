@@ -125,7 +125,7 @@ http://localhost:8000/api
 如需覆盖 API 地址：
 
 ```powershell
-$env:VITE_API_BASE_URL="http://localhost:8000/api"
+$env:VITE_API_BASE_URL="http://localhost:8000"
 ```
 
 ## DeepSeek 配置
@@ -178,6 +178,7 @@ backend/.env
 - Prompt 拼接集中在 `PromptBuilder` 和 `ContextBuilder`。
 - 预留未来流式输出和 RAG 的扩展点，但 MVP 不实现。
 - 前端快捷操作放在标题区域，不遮挡正文阅读。
+- 界面语言可在 Settings → Reading → Interface language 中切换为 English 或中文；Lesson 输出语言单独设置。
 
 ## 验证命令
 

@@ -33,6 +33,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     }
   });
 
+  if (response.status === 204) return undefined as T;
   const payload = (await response.json()) as T | ApiErrorShape;
   if (!response.ok) {
     const apiError = payload as ApiErrorShape;
@@ -52,6 +53,24 @@ export const apiClient = {
 
   listRecentLessons(limit = 20) {
     return request<ApiList<Lesson>>(`/lessons?limit=${limit}`);
+  },
+
+  listLessons(options: {
+    limit?: number;
+    offset?: number;
+    query?: string;
+    category?: Category;
+    reviewStatus?: ReviewStatus;
+    favorite?: boolean;
+  } = {}) {
+    const params = new URLSearchParams();
+    params.set('limit', String(options.limit ?? 20));
+    if (options.offset) params.set('offset', String(options.offset));
+    if (options.query?.trim()) params.set('q', options.query.trim());
+    if (options.category) params.set('category', options.category);
+    if (options.reviewStatus) params.set('review_status', options.reviewStatus);
+    if (options.favorite !== undefined) params.set('is_favorite', String(options.favorite));
+    return request<ApiList<Lesson>>(`/lessons?${params.toString()}`);
   },
 
   getLesson(id: string) {
@@ -86,9 +105,22 @@ export const apiClient = {
     });
   },
 
-  listNotes(lessonId?: string) {
-    const suffix = lessonId ? `?lesson_id=${encodeURIComponent(lessonId)}` : '';
-    return request<ApiList<Note>>(`/notes${suffix}`);
+  listNotes(lessonId?: string, limit = 100, query?: string) {
+    const params = new URLSearchParams({ limit: String(limit) });
+    if (lessonId) params.set('lesson_id', lessonId);
+    if (query?.trim()) params.set('q', query.trim());
+    return request<ApiList<Note>>(`/notes?${params.toString()}`);
+  },
+
+  updateNote(id: string, content: string) {
+    return request<Note>(`/notes/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ content })
+    });
+  },
+
+  deleteNote(id: string) {
+    return request<void>(`/notes/${encodeURIComponent(id)}`, { method: 'DELETE' });
   },
 
   getProfile() {
