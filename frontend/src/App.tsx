@@ -124,6 +124,7 @@ function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isZh = useContext(LocaleContext) === 'Chinese';
 
   useEffect(() => {
     let active = true;
@@ -167,82 +168,233 @@ function DashboardPage() {
 
   return (
     <AppShell>
-      <main className="dashboard page-transition">
-        <Reveal>
-        <section className="home-hero" aria-labelledby="dashboard-title">
-          <div className="home-copy">
-            <p className="eyebrow">{copy.dashboard.eyebrow}</p>
-            <h1 id="dashboard-title">{copy.dashboard.title}</h1>
-            <p className="home-summary">{copy.dashboard.summary}</p>
-          </div>
-          <div className="hero-panel">
-            <form className="prompt-form" onSubmit={submitLesson}>
-              <label htmlFor="learning-prompt">{copy.dashboard.promptLabel}</label>
-              <div className="prompt-box">
-                <textarea
-                  id="learning-prompt"
-                  value={prompt}
-                  onChange={(event) => setPrompt(event.target.value)}
-                  placeholder={copy.dashboard.promptPlaceholder}
-                  rows={4}
-                />
-                <button type="submit" disabled={creating || !prompt.trim()}>
-                  {creating ? copy.dashboard.starting : copy.dashboard.start}
-                </button>
+      <main className="landing page-transition">
+        {/* HERO — 复刻参考站的 2 栏结构+圆环装饰 */}
+        <section className="landing-hero" aria-labelledby="dashboard-title">
+          <div className="shell landing-hero-inner">
+            <div className="landing-hero-copy">
+              <p className="landing-kicker">Code Mentor · {isZh ? '专注阅读的学习工作台' : 'Reading-first Learning Studio'}</p>
+              <h1 id="dashboard-title">
+                {isZh ? <>把每一个知识点<br /><em className="hero-accent">真正搞懂</em></> : <>Untangle every<br /><em className="hero-accent">concept</em></>}
+              </h1>
+              <p className="landing-hero-desc">
+                {isZh ? (
+                  <><span>从 Python 到算法，</span><span>把模糊的问题变成结构化、可复习的 Lesson。</span></>
+                ) : (
+                  <><span>From Python to algorithms —</span><span>turn a vague question into a structured, revisitable lesson.</span></>
+                )}
+              </p>
+              <p className="landing-hero-sub">{copy.dashboard.summary}</p>
+              <div className="landing-actions">
+                <a className="landing-btn landing-btn-primary" href="#learn-entry">{isZh ? '开始学习 →' : 'Start learning →'}</a>
+                <a className="landing-btn landing-btn-quiet" href="#method">{isZh ? '查看学习方式' : 'How it works'}</a>
               </div>
-            </form>
-            <div className="composer-footer">
-              <span>{copy.dashboard.structured}</span>
-              <span>{category === 'general' ? copy.dashboard.anyTopic : copy.categories[category]}</span>
+              <div className="landing-hero-meta">
+                <span>{copy.dashboard.structured}</span>
+                <span>·</span>
+                <span>{isZh ? '追问·对比·笔记·复习' : 'Ask · Compare · Note · Review'}</span>
+              </div>
             </div>
-            <div className="chip-row" aria-label={copy.misc.languageFilters}>
-              {languageChips.map((chip) => (
-                <button
-                  className={category === chip.category ? 'chip active' : 'chip'}
-                  key={chip.category}
-                  onClick={() => setCategory(category === chip.category ? 'general' : chip.category)}
-                  type="button"
-                >
-                  {copy.categories[chip.category]}
-                </button>
-              ))}
+            <div className="landing-hero-visual" aria-hidden="true">
+              <div className="orbit" />
+              <div className="orbit orbit-wide" />
+              <div className="visual-core">CM</div>
+              <span className="orbit-tag tag-code">CODE</span>
+              <span className="orbit-tag tag-learn">LEARN</span>
+              <span className="orbit-tag tag-review">REVIEW</span>
             </div>
-            {error && <p className="error-text">{error}</p>}
           </div>
         </section>
-        </Reveal>
 
-        <Reveal>
-        <section className="dashboard-grid" aria-label={copy.misc.learningOverview}>
-          <GlassPanel title={copy.dashboard.recentLessons} loading={loading}>
-            {recentLessons.length ? (
-              <>
-                <div className="panel-intro">
-                  <span>{copy.dashboard.keepThread}</span>
-                  <span>{recentLessons.length} {copy.dashboard.recent}</span>
+        {/* ENTRY — 保留原有输入能力，置于 Hero 之后形成呼吸感 */}
+        <section id="learn-entry" className="landing-entry">
+          <div className="shell">
+            <Reveal>
+              <div className="landing-entry-card">
+                <div className="landing-entry-head">
+                  <p className="eyebrow">{copy.dashboard.eyebrow}</p>
+                  <h2>{isZh ? '输入一个你想搞懂的问题' : 'What do you want to understand?'}</h2>
+                  <p className="muted">{isZh ? '例如：请清楚解释 Python 装饰器，并对比它和闭包。' : 'e.g. Explain Python decorators and compare them with closures.'}</p>
                 </div>
-                <PillList items={profile?.recent_topics ?? []} empty={copy.dashboard.noRecentTopics} />
-                <div className="lesson-list">
-                  {recentLessons.map((lesson) => (
-                    <Link className="lesson-link" key={lesson.id} to={`/lesson/${lesson.id}`}>
-                      <span>{lesson.title}</span>
-                      <small>{copy.categories[lesson.category]} / {copy.difficulty[lesson.difficulty]} <span aria-hidden="true">·</span> {copy.dashboard.openLesson}</small>
-                    </Link>
+                <form className="prompt-form" onSubmit={submitLesson}>
+                  <label htmlFor="learning-prompt">{copy.dashboard.promptLabel}</label>
+                  <div className="prompt-box">
+                    <textarea
+                      id="learning-prompt"
+                      value={prompt}
+                      onChange={(event) => setPrompt(event.target.value)}
+                      placeholder={copy.dashboard.promptPlaceholder}
+                      rows={4}
+                    />
+                    <button type="submit" disabled={creating || !prompt.trim()}>
+                      {creating ? copy.dashboard.starting : copy.dashboard.start}
+                    </button>
+                  </div>
+                </form>
+                <div className="composer-footer">
+                  <span>{copy.dashboard.structured}</span>
+                  <span>{category === 'general' ? copy.dashboard.anyTopic : copy.categories[category]}</span>
+                </div>
+                <div className="chip-row" aria-label={copy.misc.languageFilters}>
+                  {languageChips.map((chip) => (
+                    <button
+                      className={category === chip.category ? 'chip active' : 'chip'}
+                      key={chip.category}
+                      onClick={() => setCategory(category === chip.category ? 'general' : chip.category)}
+                      type="button"
+                    >
+                      {copy.categories[chip.category]}
+                    </button>
                   ))}
                 </div>
-              </>
-            ) : (
-                <p className="muted">{copy.dashboard.newLessons}</p>
-            )}
-          </GlassPanel>
-          <GlassPanel title={copy.dashboard.weakPoints} loading={loading}>
-            <PillList items={profile?.weak_points ?? []} empty={copy.dashboard.noWeakPoints} />
-          </GlassPanel>
-          <GlassPanel title={copy.dashboard.recommended} loading={loading}>
-            <PillList items={profile?.recommended_topics ?? []} empty={copy.dashboard.noRecommendations} />
-          </GlassPanel>
+                {error && <p className="error-text">{error}</p>}
+              </div>
+            </Reveal>
+          </div>
         </section>
-        </Reveal>
+
+        {/* 02 / Capability ledger — 复刻 ledger 布局 */}
+        <section className="landing-section" id="capabilities" aria-labelledby="capabilities-title">
+          <div className="shell">
+            <div className="landing-section-heading">
+              <span className="landing-index">02 / Capability ledger</span>
+              <div>
+                <h2 id="capabilities-title">{isZh ? '沿着能力坐标，选择最合适的讲解' : 'Pick the right lens for the concept'}</h2>
+                <p className="landing-section-intro">{isZh ? '先选方向，再生成结构化讲解。不同主题会触发不同的示例、对比、误区与复杂度表达。' : 'Choose a lane first. Each lane triggers different examples, comparisons, pitfalls and complexity notes.'}</p>
+              </div>
+            </div>
+            <div className="landing-ledger">
+              <article className="landing-ledger-row">
+                <div className="landing-code">PYTHON / FOUNDATION</div>
+                <div><h3>Python</h3><p>{isZh ? '装饰器、闭包、生成器，以及可执行的最小示例与预期输出。' : 'Decorators, closures, generators — with runnable minimal examples.'}</p></div>
+                <div className="landing-status">{isZh ? '常用' : 'Popular'}</div>
+              </article>
+              <article className="landing-ledger-row">
+                <div className="landing-code">CPP / LIFETIME</div>
+                <div><h3>C++</h3><p>{isZh ? '引用、指针、所有权与生命周期，强调未定义行为与边界。' : 'References, pointers, ownership and lifetime — with UB and edges.'}</p></div>
+                <div className="landing-status">{isZh ? '进阶' : 'Advanced'}</div>
+              </article>
+              <article className="landing-ledger-row">
+                <div className="landing-code">SQL / DATA</div>
+                <div><h3>SQL</h3><p>{isZh ? 'JOIN、NULL、索引与执行计划，用表格展示输入与结果。' : 'JOIN, NULL, indexes and plans — shown with input/output tables.'}</p></div>
+                <div className="landing-status">{isZh ? '实用' : 'Practical'}</div>
+              </article>
+              <article className="landing-ledger-row">
+                <div className="landing-code">ALGO / COMPLEXITY</div>
+                <div><h3>Algorithms</h3><p>{isZh ? '二分、DP、图算法的正确性、复杂度与边界案例。' : 'Binary search, DP, graphs — with correctness and complexity.'}</p></div>
+                <div className="landing-status">{isZh ? '重点' : 'Core'}</div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* 03 / Access modes — 双栏 route */}
+        <section className="landing-section" id="modes" aria-labelledby="modes-title">
+          <div className="shell">
+            <div className="landing-section-heading">
+              <span className="landing-index">03 / Access modes</span>
+              <div>
+                <h2 id="modes-title">{isZh ? '从一次讲解，到一条学习链路' : 'From one lesson to a learning chain'}</h2>
+                <p className="landing-section-intro">{isZh ? '生成之后，继续追问、对比与复习。Lesson 是资源，不是聊天记录。' : 'After generation, keep asking, comparing and reviewing. Lessons are resources, not chat logs.'}</p>
+              </div>
+            </div>
+            <div className="landing-routes">
+              <article className="landing-route">
+                <span className="landing-kicker">STRUCTURED / LESSON</span>
+                <h3>{isZh ? '结构化讲解' : 'Structured lesson'}</h3>
+                <p>{isZh ? '一句话理解、核心解释、步骤、代码、误区、对比、复习要点，适合首次建立心智模型。' : 'One-liner, core, steps, code, pitfalls, comparisons and review — for first mental models.'}</p>
+                <Link className="landing-route-link" to="/history">{isZh ? '查看已生成的 Lesson →' : 'Browse lessons →'}</Link>
+              </article>
+              <article className="landing-route">
+                <span className="landing-kicker">INTERACTIVE / RETENTION</span>
+                <h3>{isZh ? '追问与留存' : 'Ask & retain'}</h3>
+                <p>{isZh ? '针对当前 Lesson 追问、换说法、举例、对比，并在笔记与复习队列中沉淀。' : 'Ask follow-ups, rephrase, get examples and comparisons — then keep notes and review queue.'}</p>
+                <Link className="landing-route-link" to="/notes">{isZh ? '打开笔记 →' : 'Open notes →'}</Link>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        {/* 04 / Working method — 三栏 step */}
+        <section className="landing-section" id="method" aria-labelledby="method-title">
+          <div className="shell">
+            <div className="landing-section-heading">
+              <span className="landing-index">04 / Working method</span>
+              <div>
+                <h2 id="method-title">{isZh ? '让输出更值得被记住' : 'Make output worth remembering'}</h2>
+                <p className="landing-section-intro">{isZh ? '清晰的输入带来更可用的输出。用三个动作建立可靠的学习节奏。' : 'Clear input makes better output. Three moves to a reliable rhythm.'}</p>
+              </div>
+            </div>
+            <div className="landing-workflow">
+              <article className="landing-step"><span className="landing-step-num">01</span><h3>{isZh ? '定义问题' : 'Define'}</h3><p>{isZh ? '说清楚你想搞懂什么、给谁用、什么不能变。' : 'Say what you want to understand, for whom, and what must not change.'}</p></article>
+              <article className="landing-step"><span className="landing-step-num">02</span><h3>{isZh ? '提供上下文' : 'Give context'}</h3><p>{isZh ? '补充必要的背景、难度与语言偏好，让示例更贴合。' : 'Add language, difficulty and context so examples fit.'}</p></article>
+              <article className="landing-step"><span className="landing-step-num">03</span><h3>{isZh ? '核验与复习' : 'Verify & review'}</h3><p>{isZh ? '核对代码、记录笔记、标记待复习，让结论成为自己的判断。' : 'Check code, write notes, queue for review — make it yours.'}</p></article>
+            </div>
+          </div>
+        </section>
+
+        {/* Dashboard overview — 保留原有数据卡片 */}
+        <section className="landing-section landing-overview" aria-label={copy.misc.learningOverview}>
+          <div className="shell">
+            <Reveal>
+              <section className="dashboard-grid">
+                <GlassPanel title={copy.dashboard.recentLessons} loading={loading}>
+                  {recentLessons.length ? (
+                    <>
+                      <div className="panel-intro">
+                        <span>{copy.dashboard.keepThread}</span>
+                        <span>{recentLessons.length} {copy.dashboard.recent}</span>
+                      </div>
+                      <PillList items={profile?.recent_topics ?? []} empty={copy.dashboard.noRecentTopics} />
+                      <div className="lesson-list">
+                        {recentLessons.map((lesson) => (
+                          <Link className="lesson-link" key={lesson.id} to={`/lesson/${lesson.id}`}>
+                            <span>{lesson.title}</span>
+                            <small>{copy.categories[lesson.category]} / {copy.difficulty[lesson.difficulty]} <span aria-hidden="true">·</span> {copy.dashboard.openLesson}</small>
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <p className="muted">{copy.dashboard.newLessons}</p>
+                  )}
+                </GlassPanel>
+                <GlassPanel title={copy.dashboard.weakPoints} loading={loading}>
+                  <PillList items={profile?.weak_points ?? []} empty={copy.dashboard.noWeakPoints} />
+                </GlassPanel>
+                <GlassPanel title={copy.dashboard.recommended} loading={loading}>
+                  <PillList items={profile?.recommended_topics ?? []} empty={copy.dashboard.noRecommendations} />
+                </GlassPanel>
+              </section>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* 05 / FAQ */}
+        <section className="landing-section" id="faq" aria-labelledby="faq-title">
+          <div className="shell">
+            <div className="landing-section-heading">
+              <span className="landing-index">05 / Questions</span>
+              <div><h2 id="faq-title">{isZh ? '常见问题' : 'FAQ'}</h2></div>
+            </div>
+            <div className="landing-faq">
+              <details><summary>{isZh ? '这个 Lesson 会包含哪些内容？' : 'What does a lesson contain?'}</summary><p>{isZh ? '一句话理解、核心解释、步骤、代码示例、常见误区、对比、复杂度与复习要点；不同主题会侧重不同维度。' : 'One-liner, core explanation, steps, code, pitfalls, comparisons, complexity and review — weighted by topic.'}</p></details>
+              <details><summary>{isZh ? '如何让输出更贴合我的问题？' : 'How to get a better fit?'}</summary><p>{isZh ? '在输入中明确背景、难度与期望语言；生成后再用追问、换说法或举例进一步细化。' : 'Be specific about context, difficulty and language; then use ask / rephrase / example to refine.'}</p></details>
+              <details><summary>{isZh ? '笔记和复习如何工作？' : 'How do notes & review work?'}</summary><p>{isZh ? '在 Lesson 底部保存笔记；在标题区标记复习状态；在历史与笔记页回溯。' : 'Save notes at the end of a lesson, mark review status in the header, revisit via History and Notes.'}</p></details>
+              <details><summary>{isZh ? '需要配置什么？' : 'What setup is needed?'}</summary><p>{isZh ? '前端在设置页保存偏好，后端通过环境变量配置 DeepSeek。' : 'Frontend saves preferences in Settings; backend uses DeepSeek env vars.'}</p></details>
+            </div>
+          </div>
+        </section>
+
+        <section className="landing-closing" aria-labelledby="closing-title">
+          <div className="shell landing-closing-inner">
+            <div>
+              <p className="landing-kicker light">06 / Continue learning</p>
+              <h2 id="closing-title">{isZh ? '把下一个模糊问题，变成清晰的 Lesson。' : 'Turn the next vague question into a clear lesson.'}</h2>
+            </div>
+            <a className="landing-btn landing-btn-primary light" href="#learn-entry">{isZh ? '回到输入框' : 'Back to input'}</a>
+          </div>
+        </section>
       </main>
     </AppShell>
   );
