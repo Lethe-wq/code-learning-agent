@@ -204,6 +204,7 @@ function DashboardPage() {
               <span className="orbit-tag tag-review">REVIEW</span>
             </div>
           </div>
+          <a className="landing-scroll-hint" href="#learn-entry" aria-label={isZh ? '下滑进入工作台' : 'Scroll to workspace'}>{isZh ? '下滑进入工作台' : 'Scroll'}</a>
         </section>
 
         {/* ENTRY — 保留原有输入能力，置于 Hero 之后形成呼吸感 */}
